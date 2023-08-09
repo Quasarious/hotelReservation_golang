@@ -22,7 +22,6 @@ func NewUserHandler(storage db.UserStorage) *UserHandler {
 
 func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
 	var (
-		//updateValues bson.M
 		params types.UpdateUserParams
 		userID = c.Params("id")
 	)
@@ -60,8 +59,8 @@ func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 		return err
 	}
 
-	if errors := params.Validate(); len(errors) > 0 {
-		return c.JSON(errors)
+	if errs := params.Validate(); len(errs) > 0 {
+		return c.JSON(errs)
 	}
 
 	user, err := types.NewUserFromParams(params)
