@@ -12,8 +12,10 @@ const userColl = "users"
 
 type UserStorage interface {
 	GetUserByID(context.Context, string) (*types.User, error)
-	GetUsers(ctx context.Context) ([]*types.User, error)
-	InsertUser(ctx context.Context, user *types.User) (*types.User, error)
+	GetUsers(context.Context) ([]*types.User, error)
+	InsertUser(context.Context, *types.User) (*types.User, error)
+	DeleteUser(context.Context, string) error
+	UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error
 }
 
 type MongoUserStore struct {
@@ -67,4 +69,31 @@ func (s *MongoUserStore) InsertUser(ctx context.Context, user *types.User) (*typ
 	user.ID = res.InsertedID.(primitive.ObjectID)
 
 	return user, nil
+}
+
+func (s *MongoUserStore) DeleteUser(ctx context.Context, id string) error {
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	//TODO: Maybe should handle if we did not delete any user(maybe log)
+	_, err = s.coll.DeleteOne(ctx, bson.M{"_id": oid})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, updateValues types.UpdateUserParams) error {
+	update := bson.D{
+		{"$set", updateValues.ToBSON()},
+	}
+	_, err := s.coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return nil
+	}
+	return nil
 }
