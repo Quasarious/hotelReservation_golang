@@ -262,3 +262,97 @@ func TestUserHandler_HandleDeleteUser_UserNotFound(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
 }
+
+func TestUserHandler_HandlePutUser_ExistingUser(t *testing.T) {
+	tdb := setup(t)
+	defer tdb.teardown(t)
+
+	user := types.User{
+		FirstName: "Mike",
+		LastName:  "Jameson",
+		Email:     "john@gmail.com",
+	}
+
+	handledUser, err := tdb.UserStorage.InsertUser(context.TODO(), &user)
+	assert.NoError(t, err)
+
+	userFound, err := tdb.GetUserByID(context.TODO(), handledUser.ID.Hex())
+	assert.NoError(t, err)
+	assert.NotEmpty(t, userFound)
+
+	app := fiber.New()
+	handler := NewUserHandler(tdb)
+	app.Put("/:id", handler.HandlePutUser)
+
+	updatedUser := types.UpdateUserParams{
+		FirstName: "John",
+		LastName:  "Doe",
+	}
+
+	updatedUserJSON, err := json.Marshal(updatedUser)
+	assert.NoError(t, err)
+	req := httptest.NewRequest("PUT", "/"+handledUser.ID.Hex(), bytes.NewBuffer(updatedUserJSON))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var responseBody map[string]string
+	err = json.NewDecoder(resp.Body).Decode(&responseBody)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]string{"updated: ": handledUser.ID.Hex()}, responseBody)
+
+	userFound, err = tdb.GetUserByID(context.TODO(), handledUser.ID.Hex())
+	assert.NoError(t, err)
+
+	assert.Equal(t, updatedUser.FirstName, userFound.FirstName)
+	assert.Equal(t, updatedUser.LastName, userFound.LastName)
+}
+
+func TestUserHandler_HandlePutUser_InvalidParams(t *testing.T) {
+	tdb := setup(t)
+	defer tdb.teardown(t)
+
+	user := types.User{
+		FirstName: "Mike",
+		LastName:  "Jameson",
+		Email:     "john@gmail.com",
+	}
+
+	handledUser, err := tdb.UserStorage.InsertUser(context.TODO(), &user)
+	assert.NoError(t, err)
+
+	userFound, err := tdb.GetUserByID(context.TODO(), handledUser.ID.Hex())
+	assert.NoError(t, err)
+	assert.NotEmpty(t, userFound)
+
+	app := fiber.New()
+	handler := NewUserHandler(tdb)
+	app.Put("/:id", handler.HandlePutUser)
+
+	updatedUser := types.UpdateUserParams{
+		FirstName: "J",
+		LastName:  "D",
+	}
+
+	updatedUserJSON, err := json.Marshal(updatedUser)
+	assert.NoError(t, err)
+	req := httptest.NewRequest("PUT", "/"+handledUser.ID.Hex(), bytes.NewBuffer(updatedUserJSON))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var responseBody map[string]string
+	err = json.NewDecoder(resp.Body).Decode(&responseBody)
+	assert.NoError(t, err)
+	assert.Equal(t, map[string]string{"updated: ": handledUser.ID.Hex()}, responseBody)
+
+	userFound, err = tdb.GetUserByID(context.TODO(), handledUser.ID.Hex())
+	assert.NoError(t, err)
+
+	assert.NotEqual(t, updatedUser.FirstName, userFound.FirstName)
+	assert.NotEqual(t, updatedUser.LastName, userFound.LastName)
+}

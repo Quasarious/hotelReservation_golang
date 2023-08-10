@@ -20,20 +20,6 @@ type UpdateUserParams struct {
 	LastName  string `json:"lastName"`
 }
 
-func (p UpdateUserParams) ToBSON() bson.M {
-	m := bson.M{}
-
-	if len(p.FirstName) > 2 {
-		m["firstName"] = p.FirstName
-	}
-
-	if len(p.LastName) > 2 {
-		m["lastName"] = p.LastName
-	}
-
-	return m
-}
-
 type CreateUserParams struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
@@ -47,6 +33,20 @@ type User struct {
 	LastName          string             `bson:"lastName" json:"lastName"`
 	Email             string             `bson:"email" json:"email"`
 	EncryptedPassword string             `bson:"EncryptedPassword" json:"-"`
+}
+
+func (p UpdateUserParams) ToBSON() bson.M {
+	m := bson.M{}
+
+	if len(p.FirstName) > 2 {
+		m["firstName"] = p.FirstName
+	}
+
+	if len(p.LastName) > 2 {
+		m["lastName"] = p.LastName
+	}
+
+	return m
 }
 
 func (params CreateUserParams) Validate() map[string]string {

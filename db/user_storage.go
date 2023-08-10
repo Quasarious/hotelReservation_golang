@@ -105,7 +105,7 @@ func (s *MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, updateVa
 	}
 	_, err := s.coll.UpdateOne(ctx, filter, update)
 	if err != nil {
-		return nil
+		return err
 	}
 	return nil
 }
