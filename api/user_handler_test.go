@@ -273,7 +273,7 @@ func TestUserHandler_HandlePutUser_ExistingUser(t *testing.T) {
 		Email:     "john@gmail.com",
 	}
 
-	handledUser, err := tdb.UserStorage.InsertUser(context.TODO(), &user)
+	handledUser, err := tdb.UserStorage.InsertUser(context.Background(), &user)
 	assert.NoError(t, err)
 
 	userFound, err := tdb.GetUserByID(context.TODO(), handledUser.ID.Hex())
@@ -303,7 +303,7 @@ func TestUserHandler_HandlePutUser_ExistingUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]string{"updated: ": handledUser.ID.Hex()}, responseBody)
 
-	userFound, err = tdb.GetUserByID(context.TODO(), handledUser.ID.Hex())
+	userFound, err = tdb.GetUserByID(context.Background(), handledUser.ID.Hex())
 	assert.NoError(t, err)
 
 	assert.Equal(t, updatedUser.FirstName, userFound.FirstName)
@@ -320,10 +320,10 @@ func TestUserHandler_HandlePutUser_InvalidParams(t *testing.T) {
 		Email:     "john@gmail.com",
 	}
 
-	handledUser, err := tdb.UserStorage.InsertUser(context.TODO(), &user)
+	handledUser, err := tdb.UserStorage.InsertUser(context.Background(), &user)
 	assert.NoError(t, err)
 
-	userFound, err := tdb.GetUserByID(context.TODO(), handledUser.ID.Hex())
+	userFound, err := tdb.GetUserByID(context.Background(), handledUser.ID.Hex())
 	assert.NoError(t, err)
 	assert.NotEmpty(t, userFound)
 
