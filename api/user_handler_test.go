@@ -22,7 +22,7 @@ const (
 )
 
 type testDB struct {
-	db.UserStorage
+	store *db.Store
 }
 
 func setup(t *testing.T) *testDB {
@@ -32,12 +32,12 @@ func setup(t *testing.T) *testDB {
 	}
 
 	return &testDB{
-		UserStorage: db.NewMongoUserStore(client, dbname),
+		store: &db.Store{Users: db.NewMongoUserStore(client)},
 	}
 }
 
 func (tdb *testDB) teardown(t *testing.T) {
-	if err := tdb.UserStorage.Drop(context.TODO()); err != nil {
+	if err := tdb.store.Users.Drop(context.TODO()); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -47,7 +47,7 @@ func TestUserHandler_HandlePostUser_ValidInput(t *testing.T) {
 	defer tdb.teardown(t)
 
 	app := fiber.New()
-	handler := NewUserHandler(tdb)
+	handler := NewUserHandler(tdb.store)
 	app.Post("/", handler.HandlePostUser)
 
 	params := types.CreateUserParams{
@@ -80,7 +80,7 @@ func TestUserHandler_HandlePostUser_InvalidInput(t *testing.T) {
 	defer tdb.teardown(t)
 
 	app := fiber.New()
-	handler := NewUserHandler(tdb) // Initialize your UserHandler here
+	handler := NewUserHandler(tdb.store) // Initialize your UserHandler here
 	app.Post("/", handler.HandlePostUser)
 
 	params := types.CreateUserParams{
@@ -114,11 +114,11 @@ func TestUserHandler_HandleGetUser_ValidInput(t *testing.T) {
 		Email:     "john@gmail.com",
 	}
 
-	handledUser, err := tdb.UserStorage.InsertUser(context.TODO(), &user)
+	handledUser, err := tdb.store.Users.InsertUser(context.TODO(), &user)
 	assert.NoError(t, err)
 
 	app := fiber.New()
-	handler := NewUserHandler(tdb)
+	handler := NewUserHandler(tdb.store)
 	app.Get("/:id", handler.HandleGetUser)
 
 	handledUserID := "/" + handledUser.ID.Hex()
@@ -141,7 +141,7 @@ func TestUserHandler_HandleGetUser_UserNotFound(t *testing.T) {
 	defer tdb.teardown(t)
 
 	app := fiber.New()
-	handler := NewUserHandler(tdb)
+	handler := NewUserHandler(tdb.store)
 	app.Get("/:id", handler.HandleGetUser)
 
 	req := httptest.NewRequest("GET", "/non_existent_user", nil)
@@ -157,7 +157,7 @@ func TestUserHandler_HandleGetUsers_NoUsers(t *testing.T) {
 	defer tdb.teardown(t)
 
 	app := fiber.New()
-	handler := NewUserHandler(tdb)
+	handler := NewUserHandler(tdb.store)
 	app.Get("/", handler.HandleGetUsers)
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -191,11 +191,11 @@ func TestUserHandler_HandleGetUsers_WithUsers(t *testing.T) {
 		},
 	}
 	for _, user := range users {
-		tdb.UserStorage.InsertUser(context.TODO(), &user)
+		tdb.store.Users.InsertUser(context.TODO(), &user)
 	}
 
 	app := fiber.New()
-	handler := NewUserHandler(tdb)
+	handler := NewUserHandler(tdb.store)
 	app.Get("/", handler.HandleGetUsers)
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -226,15 +226,15 @@ func TestUserHandler_HandleDeleteUser_UserExists(t *testing.T) {
 		Email:     "john@gmail.com",
 	}
 
-	handledUser, err := tdb.UserStorage.InsertUser(context.TODO(), &user)
+	handledUser, err := tdb.store.Users.InsertUser(context.TODO(), &user)
 	assert.NoError(t, err)
 
-	userFound, err := tdb.GetUserByID(context.TODO(), handledUser.ID.Hex())
+	userFound, err := tdb.store.Users.GetUserByID(context.TODO(), handledUser.ID.Hex())
 	assert.NoError(t, err)
 	assert.NotEmpty(t, userFound)
 
 	app := fiber.New()
-	handler := NewUserHandler(tdb)
+	handler := NewUserHandler(tdb.store)
 	app.Delete("/:id", handler.HandleDeleteUser)
 
 	req := httptest.NewRequest("DELETE", "/"+handledUser.ID.Hex(), nil)
@@ -244,7 +244,7 @@ func TestUserHandler_HandleDeleteUser_UserExists(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	_, err = tdb.GetUserByID(context.TODO(), handledUser.ID.Hex())
+	_, err = tdb.store.Users.GetUserByID(context.TODO(), handledUser.ID.Hex())
 	assert.Error(t, err) // Expecting an error indicating not found
 }
 
@@ -253,7 +253,7 @@ func TestUserHandler_HandleDeleteUser_UserNotFound(t *testing.T) {
 	defer tdb.teardown(t)
 
 	app := fiber.New()
-	handler := NewUserHandler(tdb)
+	handler := NewUserHandler(tdb.store)
 	app.Delete("/:id", handler.HandleDeleteUser)
 
 	req := httptest.NewRequest("DELETE", "/non_existent_user", nil)
@@ -273,15 +273,15 @@ func TestUserHandler_HandlePutUser_ExistingUser(t *testing.T) {
 		Email:     "john@gmail.com",
 	}
 
-	handledUser, err := tdb.UserStorage.InsertUser(context.Background(), &user)
+	handledUser, err := tdb.store.Users.InsertUser(context.Background(), &user)
 	assert.NoError(t, err)
 
-	userFound, err := tdb.GetUserByID(context.TODO(), handledUser.ID.Hex())
+	userFound, err := tdb.store.Users.GetUserByID(context.TODO(), handledUser.ID.Hex())
 	assert.NoError(t, err)
 	assert.NotEmpty(t, userFound)
 
 	app := fiber.New()
-	handler := NewUserHandler(tdb)
+	handler := NewUserHandler(tdb.store)
 	app.Put("/:id", handler.HandlePutUser)
 
 	updatedUser := types.UpdateUserParams{
@@ -303,7 +303,7 @@ func TestUserHandler_HandlePutUser_ExistingUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]string{"updated: ": handledUser.ID.Hex()}, responseBody)
 
-	userFound, err = tdb.GetUserByID(context.Background(), handledUser.ID.Hex())
+	userFound, err = tdb.store.Users.GetUserByID(context.Background(), handledUser.ID.Hex())
 	assert.NoError(t, err)
 
 	assert.Equal(t, updatedUser.FirstName, userFound.FirstName)
@@ -320,15 +320,15 @@ func TestUserHandler_HandlePutUser_InvalidParams(t *testing.T) {
 		Email:     "john@gmail.com",
 	}
 
-	handledUser, err := tdb.UserStorage.InsertUser(context.Background(), &user)
+	handledUser, err := tdb.store.Users.InsertUser(context.Background(), &user)
 	assert.NoError(t, err)
 
-	userFound, err := tdb.GetUserByID(context.Background(), handledUser.ID.Hex())
+	userFound, err := tdb.store.Users.GetUserByID(context.Background(), handledUser.ID.Hex())
 	assert.NoError(t, err)
 	assert.NotEmpty(t, userFound)
 
 	app := fiber.New()
-	handler := NewUserHandler(tdb)
+	handler := NewUserHandler(tdb.store)
 	app.Put("/:id", handler.HandlePutUser)
 
 	updatedUser := types.UpdateUserParams{
@@ -350,7 +350,7 @@ func TestUserHandler_HandlePutUser_InvalidParams(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]string{"updated: ": handledUser.ID.Hex()}, responseBody)
 
-	userFound, err = tdb.GetUserByID(context.TODO(), handledUser.ID.Hex())
+	userFound, err = tdb.store.Users.GetUserByID(context.TODO(), handledUser.ID.Hex())
 	assert.NoError(t, err)
 
 	assert.NotEqual(t, updatedUser.FirstName, userFound.FirstName)

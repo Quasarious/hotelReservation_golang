@@ -7,6 +7,7 @@ require (
 	github.com/cweill/gotests v1.6.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gofiber/fiber/v2 v2.48.0 // indirect
+	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect

@@ -71,6 +71,10 @@ func (params CreateUserParams) Validate() map[string]string {
 	return errors
 }
 
+func IsPasswordValid(encpw, pw string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(encpw), []byte(pw)) == nil
+}
+
 func isEmailValid(email string) bool {
 	mail, err := mail2.ParseAddress(email)
 

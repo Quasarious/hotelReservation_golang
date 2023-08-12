@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"hotelReservation_golang/api"
 	"hotelReservation_golang/db"
+	"hotelReservation_golang/middleware"
 	"log"
 )
 
@@ -28,15 +29,27 @@ func main() {
 
 	// handlers initialization
 	var (
-		userHandler  = api.NewUserHandler(db.NewMongoUserStore(client, db.DBNAME))
-		hotelStore   = db.NewMongoHotelStore(client)
-		roomStore    = db.NewMongoRoomStore(client, hotelStore)
-		hotelHandler = api.NewHotelHandler(hotelStore, roomStore)
+		hotelStore = db.NewMongoHotelStore(client)
+		roomStore  = db.NewMongoRoomStore(client, hotelStore)
+		userStore  = db.NewMongoUserStore(client)
+		store      = &db.Store{
+			Users:  userStore,
+			Hotels: hotelStore,
+			Rooms:  roomStore,
+		}
+		hotelHandler = api.NewHotelHandler(store)
+		userHandler  = api.NewUserHandler(store)
+		authHandler  = api.NewAuthHandler(store)
 
 		app   = fiber.New(config)
-		apiv1 = app.Group("/api/v1")
+		auth  = app.Group("/api/")
+		apiv1 = app.Group("/api/v1", middleware.JWTAuthentication)
 	)
 
+	// authentication
+	auth.Post("/auth", authHandler.HandleAuthenticate)
+
+	//Versioned API handlers
 	// user handlers
 	apiv1.Put("/user/:id", userHandler.HandlePutUser)
 	apiv1.Delete("/user/:id", userHandler.HandleDeleteUser)
@@ -46,6 +59,9 @@ func main() {
 
 	// hotel handlers
 	apiv1.Get("/hotels", hotelHandler.HandleGetHotels)
+	apiv1.Get("/hotels/:id", hotelHandler.HandleGetHotel)
+	apiv1.Get("/hotels/:id/rooms", hotelHandler.HandleGetRooms)
+	apiv1.Delete("/hotels/:id", hotelHandler.HandleDeleteHotel)
 
 	app.Listen(*listenAddr)
 }

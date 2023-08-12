@@ -2,37 +2,67 @@ package api
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"hotelReservation_golang/db"
 )
 
 type HotelHandler struct {
-	roomStore  db.RoomStore
-	hotelStore db.HotelStore
+	store *db.Store
 }
 
-type HotelQueryParams struct {
-	Rooms  bool
-	Rating float64
-}
-
-func NewHotelHandler(hs db.HotelStore, rs db.RoomStore) *HotelHandler {
+func NewHotelHandler(store *db.Store) *HotelHandler {
 	return &HotelHandler{
-		roomStore:  rs,
-		hotelStore: hs,
+		store: store,
 	}
 }
 
 func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
-	var qparams HotelQueryParams
-
-	if err := c.QueryParser(&qparams); err != nil {
-		return err
-	}
-
-	hotels, err := h.hotelStore.GetHotels(c.Context(), nil)
+	hotels, err := h.store.Hotels.GetHotels(c.Context(), nil)
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(hotels)
+}
+
+func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	oid, err := primitive.ObjectIDFromHex(id)
+
+	filter := bson.M{"hotelID": oid}
+	rooms, err := h.store.Rooms.GetRooms(c.Context(), filter)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(rooms)
+}
+
+func (h *HotelHandler) HandleGetHotel(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	oid, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		return err
+	}
+
+	hotel, err := h.store.Hotels.GetHotelByID(c.Context(), oid)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(hotel)
+}
+
+func (h *HotelHandler) HandleDeleteHotel(c *fiber.Ctx) error {
+	hotelID := c.Params("id")
+	err := h.store.Hotels.DeleteHotel(c.Context(), hotelID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(map[string]string{"deleted:": c.Params("name") + " with ID: " + hotelID})
 }
