@@ -26,7 +26,7 @@ type testDB struct {
 }
 
 func setup(t *testing.T) *testDB {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(testdburi))
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(testdburi))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -149,7 +149,37 @@ func TestUserHandler_HandleGetUser_UserNotFound(t *testing.T) {
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	// TODO: Change code in HandleGetUser to return http.StatusNotFound
-	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+func TestUserHandler_HandleGetUser_UserNotExists(t *testing.T) {
+	tdb := setup(t)
+	defer tdb.teardown(t)
+
+	user := types.User{
+		FirstName: "John",
+		LastName:  "Jameson",
+		Email:     "john@gmail.com",
+	}
+
+	handledUser, err := tdb.store.Users.InsertUser(context.TODO(), &user)
+	assert.NoError(t, err)
+
+	app := fiber.New()
+	handler := NewUserHandler(tdb.store)
+	app.Get("/:id", handler.HandleGetUser)
+
+	handledUserID := "/4" + handledUser.ID.Hex()
+	req := httptest.NewRequest("GET", handledUserID, nil)
+
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	var responseBody types.User
+	err = json.NewDecoder(resp.Body).Decode(&responseBody)
+	assert.Error(t, err)
+	assert.Empty(t, responseBody)
 }
 
 func TestUserHandler_HandleGetUsers_NoUsers(t *testing.T) {

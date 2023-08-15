@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const tokenExpirationTime = 4 * time.Hour
+
 type AuthHandler struct {
 	store db.Store
 }
@@ -41,24 +43,26 @@ func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
 	user, err := h.store.Users.GetUserByEmail(c.Context(), params.Email)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return fmt.Errorf("invalid email or password")
+			return fiber.NewError(fiber.StatusBadRequest, "Invalid email or password!")
 		}
 		return err
 	}
 
 	if !types.IsPasswordValid(user.EncryptedPassword, params.Password) {
-		return fmt.Errorf("invalid email or password")
+		return fiber.NewError(fiber.StatusUnauthorized, "Invalid email or password!")
 	}
+
 	resp := AuthResponse{
 		User:  user,
 		Token: createTokenFromUser(user),
 	}
+
 	return c.JSON(resp)
 }
 
 func createTokenFromUser(user *types.User) string {
 	now := time.Now()
-	validTill := now.Add(4 * time.Hour)
+	validTill := now.Add(tokenExpirationTime)
 	claims := jwt.MapClaims{
 		"id":    user.ID,
 		"email": user.Email,
