@@ -32,6 +32,7 @@ func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+
 	return c.JSON(rooms)
 }
 
@@ -86,8 +87,7 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 			"error": "Internal server error",
 		})
 	}
-	fmt.Println(inserted)
-	return nil
+	return c.JSON(inserted)
 }
 
 func (h *RoomHandler) isRoomAvailable(c *fiber.Ctx, params BookRoomParams, roomID primitive.ObjectID) (bool, error) {
@@ -107,7 +107,7 @@ func (h *RoomHandler) isRoomAvailable(c *fiber.Ctx, params BookRoomParams, roomI
 		})
 	}
 
-	return len(bookings) > 0, nil
+	return len(bookings) == 0, nil
 }
 
 func (p BookRoomParams) validate() error {

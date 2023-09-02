@@ -38,11 +38,11 @@ func makeTestUser(t *testing.T, tdb *db.Store) *types.User {
 
 func TestAuthHandler_HandleAuthenticate_Success(t *testing.T) {
 	tdb := setup(t)
-	insertedUser := makeTestUser(t, tdb.store)
+	insertedUser := makeTestUser(t, tdb.Store)
 	defer tdb.teardown(t)
 
 	app := fiber.New()
-	handler := NewAuthHandler(tdb.store)
+	handler := NewAuthHandler(tdb.Store)
 	app.Post("/auth", handler.HandleAuthenticate)
 
 	b, err := json.Marshal(AuthParams{
@@ -76,11 +76,11 @@ func TestAuthHandler_HandleAuthenticate_Success(t *testing.T) {
 
 func TestAuthHandler_HandleAuthenticate_Failed(t *testing.T) {
 	tdb := setup(t)
-	makeTestUser(t, tdb.store)
+	makeTestUser(t, tdb.Store)
 	defer tdb.teardown(t)
 
 	app := fiber.New()
-	handler := NewAuthHandler(tdb.store)
+	handler := NewAuthHandler(tdb.Store)
 	app.Post("/auth", handler.HandleAuthenticate)
 
 	b, err := json.Marshal(AuthParams{
@@ -113,7 +113,7 @@ func TestAuthHandler_HandleAuthenticate_InvalidJSON(t *testing.T) {
 	defer tdb.teardown(t)
 
 	app := fiber.New()
-	handler := NewAuthHandler(tdb.store)
+	handler := NewAuthHandler(tdb.Store)
 	app.Post("/auth", handler.HandleAuthenticate)
 
 	// Invalid JSON request body
@@ -139,7 +139,7 @@ func TestAuthHandler_HandleAuthenticate_MissingFields(t *testing.T) {
 	defer tdb.teardown(t)
 
 	app := fiber.New()
-	handler := NewAuthHandler(tdb.store)
+	handler := NewAuthHandler(tdb.Store)
 	app.Post("/auth", handler.HandleAuthenticate)
 
 	// Missing email

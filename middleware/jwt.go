@@ -37,7 +37,7 @@ func JWTAuthentication(storage db.UserStorage) fiber.Handler {
 }
 
 func validateToken(tokenStr string) (jwt.MapClaims, error) {
-	fmt.Println("paresJWTToken")
+	fmt.Println("parseJWTToken")
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			fmt.Println("unexpected signing method", token.Header["alg"])
