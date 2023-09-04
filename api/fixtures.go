@@ -1,10 +1,9 @@
-package fixtures
+package api
 
 import (
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"hotelReservation_golang/api"
 	"hotelReservation_golang/db"
 	"hotelReservation_golang/types"
 	"log"
@@ -77,7 +76,7 @@ func AddUser(store *db.Store, fn, ln string, admin bool) *types.User {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%s -> %s\n", user.Email, api.CreateTokenFromUser(user))
+	fmt.Printf("%s -> %s\n", user.Email, CreateTokenFromUser(user))
 
 	return insertedUser
 }

@@ -3,6 +3,7 @@ module hotelReservation_golang
 go 1.20
 
 require (
+	github.com/Andrew4d3/go-testing-examples v0.0.0-20201109012752-2b42cf32342e // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/cweill/gotests v1.6.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -17,6 +18,7 @@ require (
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.48.0 // indirect

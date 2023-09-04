@@ -45,7 +45,9 @@ func (h *BookingHandler) HandleCancelBookings(c *fiber.Ctx) error {
 func (h *BookingHandler) HandleGetBookings(c *fiber.Ctx) error {
 	bookings, err := h.store.Bookings.GetBookings(c.Context(), bson.M{})
 	if err != nil {
-		return err
+		return c.Status(http.StatusUnauthorized).JSON(map[string]string{
+			"error": "unauthorized",
+		})
 	}
 
 	return c.JSON(bookings)

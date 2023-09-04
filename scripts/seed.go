@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"hotelReservation_golang/api"
 	"hotelReservation_golang/db"
-	"hotelReservation_golang/db/fixtures"
 	"hotelReservation_golang/types"
 	"log"
 	"time"
@@ -33,13 +32,13 @@ func main() {
 	}
 	rooms := []*types.Room{}
 
-	user := fixtures.AddUser(store, "Iak", "Vapvapvv", false)
+	user := api.AddUser(store, "Iak", "Vapvapvv", false)
 	fmt.Println("IakJWT -> ", api.CreateTokenFromUser(user))
-	admin := fixtures.AddUser(store, "admin", "admin", true)
+	admin := api.AddUser(store, "admin", "admin", true)
 	fmt.Println("adminJWT -> ", api.CreateTokenFromUser(admin))
-	hotel := fixtures.AddHotel(store, "hotel1", "Moscow", 3.5, nil)
-	rooms = append(rooms, fixtures.AddRoom(store, "large", true, 199.99, hotel.ID))
-	rooms = append(rooms, fixtures.AddRoom(store, "small", false, 29.99, hotel.ID))
-	booking := fixtures.AddBooking(store, user.ID, rooms[0].ID, 2, time.Now(), time.Now().AddDate(0, 0, 3))
+	hotel := api.AddHotel(store, "hotel1", "Moscow", 3.5, nil)
+	rooms = append(rooms, api.AddRoom(store, "large", true, 199.99, hotel.ID))
+	rooms = append(rooms, api.AddRoom(store, "small", false, 29.99, hotel.ID))
+	booking := api.AddBooking(store, user.ID, rooms[0].ID, 2, time.Now(), time.Now().AddDate(0, 0, 3))
 	fmt.Println("booking id -> ", booking.ID)
 }
