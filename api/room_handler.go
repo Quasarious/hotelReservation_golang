@@ -30,7 +30,9 @@ func NewRoomHandler(store *db.Store) *RoomHandler {
 func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
 	rooms, err := h.store.Rooms.GetRooms(c.Context(), bson.M{})
 	if err != nil {
-		return err
+		return c.Status(http.StatusBadRequest).JSON(map[string]string{
+			"error": "Cannot get rooms",
+		})
 	}
 
 	return c.JSON(rooms)

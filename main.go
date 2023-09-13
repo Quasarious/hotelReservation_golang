@@ -80,5 +80,7 @@ func main() {
 	// admin handlers
 	admin.Get("/bookings", bookingHandler.HandleGetBookings)
 
+	apiv1.Put("/bookings/:id", bookingHandler.HandleCancelBookings)
+
 	app.Listen(*listenAddr)
 }

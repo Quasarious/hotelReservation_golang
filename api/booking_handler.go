@@ -21,11 +21,15 @@ func (h *BookingHandler) HandleCancelBookings(c *fiber.Ctx) error {
 	id := c.Params("id")
 	booking, err := h.store.Bookings.GetBookingByID(c.Context(), id)
 	if err != nil {
-		return err
+		return c.Status(http.StatusBadRequest).JSON(map[string]string{
+			"error": "Unable to find booking",
+		})
 	}
 	user, err := getAuthUser(c)
 	if err != nil {
-		return err
+		return c.Status(http.StatusUnauthorized).JSON(map[string]string{
+			"error": "Could not find user",
+		})
 	}
 
 	if booking.UserID != user.ID {
@@ -33,8 +37,10 @@ func (h *BookingHandler) HandleCancelBookings(c *fiber.Ctx) error {
 			"error": "unauthorized",
 		})
 	}
-	if err := h.store.Bookings.UpdateBooking(c.Context(), booking.ID.String(), bson.M{"canceled": true}); err != nil {
-		return err
+	if err := h.store.Bookings.UpdateBooking(c.Context(), booking.ID.Hex(), bson.M{"canceled": true}); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(map[string]string{
+			"error": "error updating booking",
+		})
 	}
 	return c.Status(http.StatusOK).JSON(map[string]string{
 		"status": "updated",
@@ -58,11 +64,15 @@ func (h *BookingHandler) HandleGetBooking(c *fiber.Ctx) error {
 	id := c.Params("id")
 	booking, err := h.store.Bookings.GetBookingByID(c.Context(), id)
 	if err != nil {
-		return err
+		return c.Status(http.StatusBadRequest).JSON(map[string]string{
+			"error": "Unable to find booking",
+		})
 	}
 	user, err := getAuthUser(c)
 	if err != nil {
-		return err
+		return c.Status(http.StatusUnauthorized).JSON(map[string]string{
+			"error": "Could not find user",
+		})
 	}
 	if booking.UserID != user.ID {
 		return c.Status(http.StatusUnauthorized).JSON(map[string]string{

@@ -1,11 +1,9 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"go.mongodb.org/mongo-driver/mongo"
 	"hotelReservation_golang/db"
 	"hotelReservation_golang/types"
 	"os"
@@ -42,10 +40,7 @@ func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
 
 	user, err := h.store.Users.GetUserByEmail(c.Context(), params.Email)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return fiber.NewError(fiber.StatusBadRequest, "Invalid email or password!")
-		}
-		return err
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid email or password!")
 	}
 
 	if !types.IsPasswordValid(user.EncryptedPassword, params.Password) {
