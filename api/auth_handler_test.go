@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/gofiber/fiber/v2"
-	"github.com/stretchr/testify/assert"
 	"hotelReservation_golang/db"
 	"hotelReservation_golang/types"
 	"log"
@@ -13,6 +11,9 @@ import (
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 func makeTestUser(t *testing.T, tdb *db.Store) *types.User {
@@ -53,7 +54,7 @@ func TestAuthHandler_HandleAuthenticate_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("POST", "/auth", bytes.NewReader(b))
+	req := httptest.NewRequest(http.MethodPost, "/auth", bytes.NewReader(b))
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
@@ -91,7 +92,7 @@ func TestAuthHandler_HandleAuthenticate_Failed(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("POST", "/auth", bytes.NewReader(b))
+	req := httptest.NewRequest(http.MethodPost, "/auth", bytes.NewReader(b))
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
@@ -119,7 +120,7 @@ func TestAuthHandler_HandleAuthenticate_InvalidJSON(t *testing.T) {
 	// Invalid JSON request body
 	b := []byte(`invalid-json`)
 
-	req := httptest.NewRequest("POST", "/auth", bytes.NewReader(b))
+	req := httptest.NewRequest(http.MethodPost, "/auth", bytes.NewReader(b))
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
@@ -150,7 +151,7 @@ func TestAuthHandler_HandleAuthenticate_MissingFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	req := httptest.NewRequest("POST", "/auth", bytes.NewReader(b))
+	req := httptest.NewRequest(http.MethodPost, "/auth", bytes.NewReader(b))
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := app.Test(req)
 	assert.NoError(t, err)

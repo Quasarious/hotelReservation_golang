@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/gofiber/fiber/v2"
-	"github.com/stretchr/testify/assert"
 	"hotelReservation_golang/types"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUserHandler_HandlePostUser_ValidInput(t *testing.T) {
