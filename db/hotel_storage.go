@@ -5,13 +5,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"hotelReservation_golang/my_conf"
 	"hotelReservation_golang/types"
 )
 
 type HotelStore interface {
 	InsertHotel(ctx context.Context, hotel *types.Hotel) (*types.Hotel, error)
 	UpdateHotel(ctx context.Context, filter map[string]any, update map[string]any) error
-	GetHotels(ctx context.Context, m map[string]any) ([]*types.Hotel, error)
+	GetHotels(ctx context.Context, m bson.M, pg *PaginationFilter) ([]*types.Hotel, error)
 	GetHotelByID(ctx context.Context, id primitive.ObjectID) (*types.Hotel, error)
 	DeleteHotel(ctx context.Context, id string) error
 }
@@ -24,12 +26,15 @@ type MongoHotelStore struct {
 func NewMongoHotelStore(client *mongo.Client) *MongoHotelStore {
 	return &MongoHotelStore{
 		client: client,
-		coll:   client.Database(DBNAME).Collection("hotels"),
+		coll:   client.Database(my_conf.DBNAME).Collection("hotels"),
 	}
 }
 
-func (s *MongoHotelStore) GetHotels(ctx context.Context, filter map[string]any) ([]*types.Hotel, error) {
-	resp, err := s.coll.Find(ctx, filter)
+func (s *MongoHotelStore) GetHotels(ctx context.Context, filter bson.M, pg *PaginationFilter) ([]*types.Hotel, error) {
+	opts := options.FindOptions{}
+	opts.SetSkip((pg.Page - 1) * pg.Limit)
+	opts.SetLimit(pg.Limit)
+	resp, err := s.coll.Find(ctx, filter, &opts)
 	if err != nil {
 		return nil, err
 	}

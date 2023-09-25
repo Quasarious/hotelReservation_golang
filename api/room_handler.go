@@ -28,21 +28,34 @@ func NewRoomHandler(store *db.Store) *RoomHandler {
 }
 
 func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
-	rooms, err := h.store.Rooms.GetRooms(c.Context(), bson.M{})
+	var params RoomQueryParams
+	if err := c.QueryParser(&params); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(map[string]string{"error": "no filtration able"})
+	}
+
+	filter := bson.M{}
+	rooms, err := h.store.Rooms.GetRooms(c.Context(), filter, &params.PaginationFilter)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(map[string]string{
 			"error": "Cannot get rooms",
 		})
 	}
 
-	return c.JSON(rooms)
+	resp := RoomsSourceResp{
+		ResourceResp: ResourceResp{
+			Results: len(rooms),
+			Page:    int(params.Page),
+		},
+		Rooms: rooms,
+	}
+	return c.JSON(resp)
 }
 
 func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	var params BookRoomParams
 	err := c.BodyParser(&params)
 	if err != nil {
-		return c.Status(400).JSON(map[string]string{
+		return c.Status(http.StatusBadRequest).JSON(map[string]string{
 			"error": "Bad request",
 		})
 	}
@@ -67,10 +80,12 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 
 	isAvailable, err := h.isRoomAvailable(c, params, roomID)
 	if err != nil {
-		return err
+		return c.Status(http.StatusBadRequest).JSON(map[string]string{
+			"error": "Room was not found",
+		})
 	}
 	if !isAvailable {
-		return c.Status(404).JSON(map[string]string{
+		return c.Status(http.StatusNotFound).JSON(map[string]string{
 			"error": "Cannot book this room in these dates",
 		})
 	}

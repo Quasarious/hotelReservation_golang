@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"hotelReservation_golang/my_conf"
 	"hotelReservation_golang/types"
 )
 
@@ -25,7 +26,7 @@ type MongoBookingStorage struct {
 func NewMongoBookingStorage(client *mongo.Client) *MongoBookingStorage {
 	return &MongoBookingStorage{
 		client: client,
-		coll:   client.Database(DBNAME).Collection("bookings"),
+		coll:   client.Database(my_conf.DBNAME).Collection("bookings"),
 	}
 }
 

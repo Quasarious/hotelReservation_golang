@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"hotelReservation_golang/my_conf"
 	"hotelReservation_golang/types"
 )
 
@@ -39,7 +40,7 @@ func (s *MongoUserStore) Drop(ctx context.Context) error {
 func NewMongoUserStore(client *mongo.Client) *MongoUserStore {
 	return &MongoUserStore{
 		client: client,
-		coll:   client.Database(DBNAME).Collection(userColl),
+		coll:   client.Database(my_conf.DBNAME).Collection(userColl),
 	}
 }
 

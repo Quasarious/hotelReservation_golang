@@ -32,3 +32,9 @@ vet:
 
 lint:
 	golangci-lint run --enable-all
+
+docker:
+	echo "building docker file"
+	@docker build -t api .
+	echo "running API inside Docker container"
+	@docker run -p 3000:3000 api

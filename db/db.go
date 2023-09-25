@@ -1,10 +1,9 @@
 package db
 
-const (
-	DBNAME     = "hotel-reservation"
-	TestDBNAME = "hotel-reservation-test"
-	DBURI      = "mongodb://localhost:27017"
-)
+type PaginationFilter struct {
+	Limit int64
+	Page  int64
+}
 
 type Store struct {
 	Users    UserStorage

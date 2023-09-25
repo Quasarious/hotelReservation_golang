@@ -5,12 +5,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"hotelReservation_golang/db"
+	"hotelReservation_golang/my_conf"
 	"log"
 	"testing"
-)
-
-const (
-	testdbname = "hotel-reservation-test"
 )
 
 type testDB struct {
@@ -19,7 +16,8 @@ type testDB struct {
 }
 
 func setup(t *testing.T) *testDB {
-	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(db.DBURI))
+	my_conf.LoadEnv()
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(my_conf.DBURL))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,7 +34,7 @@ func setup(t *testing.T) *testDB {
 }
 
 func (tdb *testDB) teardown(t *testing.T) {
-	if err := tdb.client.Database(db.DBNAME).Drop(context.TODO()); err != nil {
+	if err := tdb.client.Database(my_conf.DBNAME).Drop(context.TODO()); err != nil {
 		t.Fatal(err)
 	}
 }

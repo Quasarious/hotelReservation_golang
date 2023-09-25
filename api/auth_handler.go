@@ -63,8 +63,6 @@ func CreateTokenFromUser(user *types.User) string {
 		"email": user.Email,
 		"exp":   validTill.Unix(),
 	}
-	claims["id"] = user.ID
-	claims["email"] = user.Email
 
 	secret := os.Getenv("JWT_SECRET")
 	strToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(secret))
